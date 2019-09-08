@@ -9,6 +9,7 @@ export default class RepositorySchema  {
       description: 'string',
       stars: 'int',
       forks: 'int',
+      language: 'string'
     }
   }
 }

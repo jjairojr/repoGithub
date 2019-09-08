@@ -18,6 +18,7 @@ export default function Main() {
 
       const data = realm.objects('Repository').sorted('stars', true)
       setRepositories(data);
+      console.tron.log(data)
     }
 
 
@@ -26,33 +27,47 @@ export default function Main() {
 
   async function saveRepository(repository) {
     const data = {
+      language: repository.language,
       id: repository.id,
       name: repository.name,
       fullName: repository.full_name,
       description: repository.description,
       stars: repository.stargazers_count,
-      forks: repository.forks_count
+      forks: repository.forks_count,
     }
+
 
     const realm = await getRealm()
 
     realm.write(() => {
-      realm.create('Repository', data)
+      realm.create('Repository', data, 'modified')
     })
+
+    return data;
   }
 
   async function handleAddRepository() {
     try {
       const response = await api.get(`/repos/${input}`)
       await saveRepository(response.data)
+      console.tron.log(response.data)
       setInput("")
       Keyboard.dismiss()
       setError(false)
 
     } catch (err) {
       setError(true)
-      console.tron.log('Erro')
+      console.tron.log('Erro', err)
     }
+  }
+
+  async function handleRefreshRepository(repository) {
+    const response = await api.get(`/repos/${repository.fullName}`)
+
+   const data = await saveRepository(response.data);
+
+   setRepositories(repositories.map(repo => repo.id === data.id ? data : repo))
+   console.tron.log('teste')
   }
 
   return (
@@ -77,7 +92,7 @@ export default function Main() {
         data={repositories}
         keyExtractor={item => String(item.id)}
         renderItem={({ item }) => (
-          <Repository data={item}/>
+          <Repository data={item} onRefresh={() => handleRefreshRepository(item)}/>
         )}
       />
     </Container>
